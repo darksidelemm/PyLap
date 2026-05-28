@@ -1,14 +1,9 @@
 import glob
 import os
 import platform
-import struct
 
 import numpy as np
-try:
-    from setuptools import setup, Extension
-except ImportError:
-    from distutils.core import setup
-    from distutils.core import Extension
+from setuptools import setup, Extension, find_packages
 
 
 # ---------------------------------------------------------------------------
@@ -136,7 +131,9 @@ setup(
     name='pylap',
     version='0.1.0-alpha',
     description='A numpy-compatible Python 3 wrapper for the PHaRLAP ionospheric raytracer',
-    packages=['pylap'],
-    package_dir={'pylap': 'modules/pylap'},
+    packages=find_packages(where='src'),
+    package_dir={'': 'src'},
+    package_data={'pylap': ['data/*.dat']},
+    python_requires='>=3.9',
     ext_modules=native_modules,
 )

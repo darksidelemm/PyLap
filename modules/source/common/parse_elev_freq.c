@@ -13,7 +13,7 @@ int parse_elev_freq(PyArrayObject *elevs_src, PyArrayObject *freqs_src,
   PyArray_Descr *dtypes[2];
   dtypes[0] = dtypes[1] = PyArray_DescrFromType(NPY_DOUBLE);
 
-  NpyIter *iter = NpyIter_MultiNew(3, arrs, NPY_ITER_EXTERNAL_LOOP,
+  NpyIter *iter = NpyIter_MultiNew(2, arrs, NPY_ITER_EXTERNAL_LOOP,
       NPY_KEEPORDER, NPY_EQUIV_CASTING, arr_flags, dtypes);
 
   ASSERT_INT_NOMSG((iter != NULL));

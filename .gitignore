@@ -1,12 +1,11 @@
 *.pyc
 *.so
 build/
+*.egg-info/
 venv/
 __pycache__/
 
-Ionosphere/__pycache__/*
-
-Examples/results/*
+examples/results/*
 iri2020_test_output.png
 *.nc
 .nc

@@ -20,7 +20,7 @@ static PyObject *nrlmsise00(PyObject *self, PyObject *args)
   ASSERT((num_args == 4 || num_args == 7), PyExc_ValueError, "invalid number "
     "of arguments");
 
-  ASSERT_NOMSG(check_ref_data("iri2016"));
+  ASSERT_NOMSG(check_ref_data("iri2020"));
 
   /* Initialize NumPy. */
   import_array();

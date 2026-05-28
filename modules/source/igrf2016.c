@@ -23,7 +23,7 @@ static PyObject *igrf2016(PyObject *self, PyObject *args)
   ASSERT_NOMSG(PyArg_ParseTuple(args, "ffO!f", &latitude, &longitude,
       &PyList_Type, &tm, &height));
 
-  ASSERT_NOMSG(check_ref_data("iri2016"));
+  ASSERT_NOMSG(check_ref_data("iri2020"));
 
   /* Parse UT. */
   int *ut = (int *)malloc(5 * sizeof(int));
