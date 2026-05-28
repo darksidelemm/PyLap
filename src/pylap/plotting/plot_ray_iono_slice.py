@@ -77,7 +77,9 @@ from qtpy.QtWidgets import QApplication
 
 
 def plot_ray_iono_slice(iono_grid, start_range, end_range, range_inc,
-                start_height, end_height, height_inc, ray, **kwargs):
+                start_height, end_height, height_inc, ray,
+                axis_font_scale=0.55, bottom_margin_scale=0.05,
+                colorbar_y=0.31, **kwargs):
 
     
     #M Input consistency and error checking
@@ -145,6 +147,9 @@ def plot_ray_iono_slice(iono_grid, start_range, end_range, range_inc,
         fontsize1 = 16
         fontsize2 = 16
         vert_label_corr = 0
+
+    fontsize1 = max(1, fontsize1 * axis_font_scale)
+    fontsize2 = max(1, fontsize2 * axis_font_scale)
     #M initialize the figure
 
     max_range = end_range - start_range
@@ -172,11 +177,12 @@ def plot_ray_iono_slice(iono_grid, start_range, end_range, range_inc,
     iono_Y = np.multiply(rt, np.cos(theta))
     
     #M plot the ionospheric slice
-    fig = plt.figure(figsize=(screen_width_in, screen_height_in))
-    ax = fig.add_axes([0, 0.25, .95, 0.5])
-    l, b, w, h = ax.get_position().bounds
+    fig = plt.figure(figsize=(max(screen_width_in, 8), max(screen_height_in, 5)))
+    ax = fig.add_axes([0.12, 0.30, 0.78, 0.58])
     ax.axis('off')  # turn off rectangler suround box and tic marks
-    image = plt.pcolormesh(iono_X, iono_Y, iono_grid,shading='gouraud', vmin=0, vmax=14)
+    image = ax.pcolormesh(
+        iono_X, iono_Y, iono_grid, shading='gouraud', vmin=0, vmax=14
+    )
     ax.set_aspect('equal')
     ax.axis('off')  # turn off rectangler suround box and tic marks
    
@@ -231,19 +237,24 @@ def plot_ray_iono_slice(iono_grid, start_range, end_range, range_inc,
         tick_Y2 = (tick_r - tick_len) * np.cos(tick_theta[idx])
         xpts = np.array([tick_X1, tick_X2])
         ypts = np.array([tick_Y1, tick_Y2])
-        plt.plot(xpts, ypts, 'k', linewidth=2)
+        ax.plot(xpts, ypts, 'k', linewidth=2)
         tick_label_X = (tick_r - 3 * tick_len) * np.sin(tick_theta[idx])
         tick_label_Y = (tick_r - 3 * tick_len) * np.cos(tick_theta[idx])
         tick_label = str(int(tick_gndrng[idx] + start_range))
-        plt.text(tick_label_X, tick_label_Y, tick_label, horizontalalignment=
-             'center', fontsize=fontsize1)
+        ax.text(
+            tick_label_X, tick_label_Y, tick_label,
+            horizontalalignment='center', verticalalignment='top',
+            fontsize=fontsize1
+        )
     #M display the 'ground range - axis' label
     text_theta = 0
     xlabel_X = rad_earth * np.sin(text_theta)
     xlabel_Y = rad_earth * np.cos(text_theta) - tick_len * 6
     
-    plt.text(xlabel_X, xlabel_Y, 'Ground Range (km)', fontsize=fontsize2, 
-             horizontalalignment='center')
+    ax.text(
+        xlabel_X, xlabel_Y, 'Ground Range (km)', fontsize=fontsize2,
+        horizontalalignment='center', verticalalignment='top'
+    )
          
     #M
     #M display the height ticks
@@ -278,12 +289,15 @@ def plot_ray_iono_slice(iono_grid, start_range, end_range, range_inc,
         tick_Y2 = tick_Y1 - tick_len * np.sin(np.abs(tick_theta))
         xpts = np.array([tick_X1, tick_X2])
         ypts = np.array([tick_Y1, tick_Y2])
-        plt.plot(xpts, ypts, 'k', linewidth=2)
+        ax.plot(xpts, ypts, 'k', linewidth=2)
         tick_label = str(tick_stepsize * idx)
         tick_label_X = tick_X2 - tick_len / 2
         tick_label_Y = tick_Y2
-        plt.text(tick_label_X, tick_label_Y, tick_label, horizontalalignment=
-           'right', fontsize=fontsize1)
+        ax.text(
+            tick_label_X, tick_label_Y, tick_label,
+            horizontalalignment='right', verticalalignment='center',
+            fontsize=fontsize1
+        )
       #M display the 'height - axis' label
       
     # the constant 0.007 is to increase speration of label from values
@@ -297,24 +311,45 @@ def plot_ray_iono_slice(iono_grid, start_range, end_range, range_inc,
     ylabel_Y = r_dist * np.cos(text_theta) - pos_adjust \
                    * np.sin(np.abs(tick_theta))
     
-    plt.text(ylabel_X-100, ylabel_Y, 'Altitude (km)', rotation=text_rot,
-         horizontalalignment='center', fontsize=fontsize2)
+    ylabel_X = ylabel_X - 100
+    ax.text(
+        ylabel_X, ylabel_Y, 'Altitude (km)', rotation=text_rot,
+        horizontalalignment='center', verticalalignment='center',
+        fontsize=fontsize2
+    )
+
+    # Text artists do not expand data limits automatically. Reserve space for
+    # the hand-drawn range/height scales so labels do not overlap the image.
+    x_margin = max((max_X - min_X) * 0.08, 140)
+    y_margin_bottom = max((max_Y - min_Y) * bottom_margin_scale, tick_len * 4)
+    y_margin_top = max((max_Y - min_Y) * 0.05, 25)
+    ax.set_xlim(min(min_X, ylabel_X) - x_margin, max_X + x_margin)
+    ax.set_ylim(min_Y - y_margin_bottom, max_Y + y_margin_top)
     
     #M
     #M set up the colourbar
     #M
     
-    save_pos = ax.get_position().bounds
-    fig.colorbar(image, ax=ax, orientation='horizontal', shrink=0.40, 
-                 aspect=50, label='Plasma Freqency (MHz)')
-    new_pos = ax.get_position().bounds
-    new_pos = [0.09445982643511991, 0.35, 0.76108034712976, 0.50]
-    ax.set_position(new_pos)
+    cax = fig.add_axes([0.30, colorbar_y, 0.40, 0.04])
+    cbar = fig.colorbar(
+        image, cax=cax, orientation='horizontal',
+        label='Plasma Frequency (MHz)'
+    )
+    cbar.ax.tick_params(labelsize=fontsize1)
+    cbar.ax.xaxis.label.set_size(fontsize2)
     
     
     #M
     #M now plot the rays
     #M
+    ray_kwargs = kwargs.copy()
+    if 'linewidth' in ray_kwargs:
+        ray_kwargs['linewidth'] = ray_kwargs['linewidth'] * 0.5
+    elif 'lw' in ray_kwargs:
+        ray_kwargs['lw'] = ray_kwargs['lw'] * 0.5
+    else:
+        ray_kwargs['linewidth'] = plt.rcParams['lines.linewidth'] * 0.5
+
     ray_handle = []
     # not the code below assumes that the loop will not execute  print(ray[idx].keys())is ray is
     # an empy list
@@ -339,18 +374,7 @@ def plot_ray_iono_slice(iono_grid, start_range, end_range, range_inc,
         ray_theta = (ray_gndrng - start_range - max_range/2) / rad_earth
         ray_X = ray_r * np.sin(ray_theta)
         ray_Y = ray_r * np.cos(ray_theta)
-        plt.plot(ray_X, ray_Y)
-       
-       
-        plot_cmd = 'plt.plot(ray_X, ray_Y'
-        for idx in kwargs.keys():
-            if type(kwargs[idx]) == str:
-                plot_cmd = plot_cmd + ',' + idx + '=' +\
-                    "'" + kwargs[idx] + "'"
-            else:
-                plot_cmd = plot_cmd + ',' + idx + '=' + str(kwargs[idx])
-        plot_cmd = plot_cmd + ')'
-        h = eval(plot_cmd)
+        h = ax.plot(ray_X, ray_Y, **ray_kwargs)
         ray_handle.append(h)
         
         import os

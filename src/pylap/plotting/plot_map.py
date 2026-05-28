@@ -110,7 +110,7 @@ def plot_maps(alt=250.,output_dir='output',figsize=(14,8),
 
             # Plot Title
             txt = []
-            txt.append('{0} - Alt: {1:.0f} km'.format(date.strftime('%d %b %Y %H%M UT'),float(alts[alt_inx])))
+            txt.append('{0} - Alt: {1:.0f} km'.format(date.strftime('%Y-%m-%dT%H:%MZ'),float(alts[alt_inx])))
             ax.set_title('\n'.join(txt),fontdict={'weight':'bold','size':'xx-large'})
 
             fname = '{0}_{1:03.0f}km_edens_map.png'.format(date.strftime('%Y%m%d_%H%MUT'),float(alts[alt_inx]))

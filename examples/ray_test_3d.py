@@ -61,6 +61,10 @@ origin_ht = 0.0  # % altitude of the start point of rays
 doppler_flag = 1  # % interested in Doppler shift
 
 
+def format_ut(ut):
+    return '{:04d}-{:02d}-{:02d}T{:02d}:{:02d}Z'.format(*ut)
+
+
 print('\n Example of 3D magneto-ionic numerical \
       raytracing for a WGS84 ellipsoidal Earth\n\n')
 
@@ -237,8 +241,7 @@ iono_pf_subgrid = np.zeros((int(end_ht_idx), int(end_range_idx)))
 ax, hanlde = plot_ray_iono_slice.plot_ray_iono_slice(iono_pf_subgrid, start_range, end_range, range_inc,
                                                      start_ht, end_ht, height_inc, ray_O, linewidth=1.5, color=[1, 1, 0.99])
 
-fig_str_a = '{}/{}/{}  {:02d}:{:02d}UT   {}MHz   R12 = {}'.format(
-    UT[1], UT[2], UT[0], UT[3], UT[4], freq, R12)
+fig_str_a = '{}   {}MHz   R12 = {}'.format(format_ut(UT), freq, R12)
 fig_str_b = '   lat = {}, lon = {}, bearing = {}'.format(
     origin_lat, origin_long, ray_bears[0])
 

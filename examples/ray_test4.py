@@ -50,6 +50,11 @@ irregs_flag = 0             # no irregularities - not interested in
 kp = 0                      # kp not used as irregs_flag = 0. Set it to a 
                              # dummy value 
 
+
+def format_ut(ut):
+    return '{:04d}-{:02d}-{:02d}T{:02d}:{:02d}Z'.format(*ut)
+
+
 print( \
   '\nExample of 2D numerical raytracing for a ray at different frequencies\n\n')
 
@@ -126,8 +131,8 @@ ax, ray_handle = plot_iono.plot_ray_iono_slice(iono_pf_subgrid, start_range,
                       end_range, range_inc, start_ht, end_ht, height_inc,
                       ray_path_data,linewidth=1.5, color=[1, 1, 0.99])
 
-fig_str_a = '{}/{}/{}  {:02d}:{:02d}UT   elevation = {} deg   R12 = {}'.format(
-              UT[1], UT[2], UT[0], UT[3], UT[4], elevs[1], R12)
+fig_str_a = '{}   elevation = {} deg   R12 = {}'.format(
+              format_ut(UT), elevs[1], R12)
 fig_str_b = '   lat = {}, lon = {}, bearing = {}'.format(
              origin_lat, origin_long, ray_bear)
 

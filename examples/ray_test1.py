@@ -83,6 +83,10 @@ kp = 0                       #M kp not used as irregs_flag = 0. Set it to a
                              #M dummy value
 
 
+def format_ut(ut):
+    return '{:04d}-{:02d}-{:02d}T{:02d}:{:02d}Z'.format(*ut)
+
+
 print('\n'
        'Example of 2D numerical raytracing for a fan of rays for a WGS84'
        ' ellipsoidal Earth\n\n') # py
@@ -152,8 +156,7 @@ ax, ray_handle = plot_iono.plot_ray_iono_slice(iono_pf_subgrid, start_range,
                       ray_path_data,linewidth=1.5, color=[1, 1, 0.99])
 
 
-fig_str_a = '{}/{}/{}  {:02d}:{:02d}UT   {}MHz   R12 = {}'.format(
-              UT[1], UT[2], UT[0], UT[3], UT[4], freq, R12)
+fig_str_a = '{}   {}MHz   R12 = {}'.format(format_ut(UT), freq, R12)
 fig_str_b = '   lat = {}, lon = {}, bearing = {}'.format(
              origin_lat, origin_long, ray_bear)
 
@@ -196,8 +199,7 @@ ax2, ray_handle2 = plot_iono.plot_ray_iono_slice(iono_pf_subgrid, start_range,
                       ray_path_data,linewidth=1.5, color='w')
 
 freq = freqs[0]
-fig_str_a = '{}/{}/{}  {:02d}:{:02d}UT   {}MHz   R12 = {}'.format(
-              UT[2], UT[1], UT[0], UT[3], UT[4], freq, R12)
+fig_str_a = '{}   {}MHz   R12 = {}'.format(format_ut(UT), freq, R12)
 fig_str_b = '   lat = {}, lon = {}, bearing = {}'.format(
              origin_lat, origin_long, ray_bear)
 fig_str = fig_str_a + fig_str_b

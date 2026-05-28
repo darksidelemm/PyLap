@@ -25,7 +25,8 @@ class Plot_2D_slice:
     # create an object of this class
     # determine all machine and operating system dependicies
     # such as font sizes and size of image on scree
-    def __init__(self):
+    def __init__(self, axis_font_scale=0.55, bottom_margin_scale=0.05,
+                 colorbar_y=0.31):
         app = QApplication.instance() or QApplication(sys.argv)
         screen = app.screens()[0]
         dpi= screen.physicalDotsPerInch()
@@ -56,10 +57,15 @@ class Plot_2D_slice:
             self.__fontsize1 = 16
             self.__fontsize2 = 16
             self.__vert_label_corr = 0
+
+        self.__fontsize1 = max(1, self.__fontsize1 * axis_font_scale)
+        self.__fontsize2 = max(1, self.__fontsize2 * axis_font_scale)
+        self.__bottom_margin_scale = bottom_margin_scale
+        self.__colorbar_y = colorbar_y
         #M determine how the display window should be sized
         #self.__ypos = self.__scrsz.height() * 0.25
-            self.__xsize = self.__scrsz.width() * 0.95
-            self.__ysize = self.__scrsz.height() * 0.5
+        self.__xsize = scrsz.width() * 0.95
+        self.__ysize = scrsz.height() * 0.5
         
     #
     # set up the axes to the ionosphere and rays
@@ -114,13 +120,13 @@ class Plot_2D_slice:
         # handle = pcolor(iono_X, iono_Y, iono_grid)
         # shading flat
         # axis equal
-        fig = plt.figure(figsize=(self.__screen_width_in,
-                                  self.__screen_height_in))
-        ax = fig.add_axes([0, 0.25, .95, 0.5])
+        fig = plt.figure(figsize=(max(self.__screen_width_in, 8),
+                                  max(self.__screen_height_in, 5)))
+        ax = fig.add_axes([0.12, 0.30, 0.78, 0.58])
         l, b, w, h = ax.get_position().bounds
         ax.axis('off')  # turn off rectangler suround box and tic marks
-        image = plt.pcolormesh(self.__iono_X, self.__iono_Y, iono_grid,
-                               shading='gouraud')
+        image = ax.pcolormesh(self.__iono_X, self.__iono_Y, iono_grid,
+                              shading='gouraud')
         ax.set_aspect('equal')
         ax.axis('off')  # turn off rectangler suround box and tic marks
         # plt.show(block=False)
@@ -183,19 +189,21 @@ class Plot_2D_slice:
             
             xpts = np.array([tick_X1, tick_X2])
             ypts = np.array([tick_Y1, tick_Y2])
-            plt.plot(xpts, ypts, 'k', linewidth=2)
+            ax.plot(xpts, ypts, 'k', linewidth=2)
             tick_label_X = (tick_r - 3 * tick_len) * np.sin(tick_theta[idx])
             tick_label_Y = (tick_r - 3 * tick_len) * np.cos(tick_theta[idx])
             tick_label = str(int(tick_gndrng[idx] + self.__start_range))
-            plt.text(tick_label_X, tick_label_Y, tick_label,
-                     horizontalalignment='center', fontsize=self.__fontsize1)
+            ax.text(tick_label_X, tick_label_Y, tick_label,
+                    horizontalalignment='center', verticalalignment='top',
+                    fontsize=self.__fontsize1)
         #M display the 'ground range - axis' label
         text_theta = 0
         xlabel_X = Plot_2D_slice.__rad_earth * np.sin(text_theta)
         xlabel_Y = Plot_2D_slice.__rad_earth * np.cos(text_theta) - tick_len * 6
         
-        plt.text(xlabel_X, xlabel_Y, 'Ground Range (km)',
-                 fontsize=self.__fontsize2, horizontalalignment='center')
+        ax.text(xlabel_X, xlabel_Y, 'Ground Range (km)',
+                fontsize=self.__fontsize2, horizontalalignment='center',
+                verticalalignment='top')
              
         #M
         #M display the height ticks
@@ -238,13 +246,14 @@ class Plot_2D_slice:
             tick_Y2 = tick_Y1 - tick_len * np.sin(np.abs(tick_theta))
             xpts = np.array([tick_X1, tick_X2])
             ypts = np.array([tick_Y1, tick_Y2])
-            plt.plot(xpts, ypts, 'k', linewidth=2)
+            ax.plot(xpts, ypts, 'k', linewidth=2)
             tick_label = str(tick_stepsize * idx)
             tick_label_X = tick_X2 - tick_len / 2
             tick_label_Y = tick_Y2
             # print(tick_label,tick_label_X,tick_label_Y,tick_theta)
-            plt.text(tick_label_X, tick_label_Y, tick_label,
-                     horizontalalignment='right', fontsize=self.__fontsize1)
+            ax.text(tick_label_X, tick_label_Y, tick_label,
+                    horizontalalignment='right', verticalalignment='center',
+                    fontsize=self.__fontsize1)
           #M display the 'height - axis' label
           
              # 'HorizontalAlignment', 'center', 'fontsize', fontsize2
@@ -263,8 +272,21 @@ class Plot_2D_slice:
                        * np.sin(np.abs(tick_theta))
         # print(text_theta,text_rot,pos_adjust,ylabel_X,ylabel_Y)
         
-        plt.text(ylabel_X, ylabel_Y, 'Altitude (km)', rotation=text_rot,
-             horizontalalignment='center', fontsize=self.__fontsize2)
+        ylabel_X = ylabel_X - 100
+        ax.text(ylabel_X, ylabel_Y, 'Altitude (km)', rotation=text_rot,
+                horizontalalignment='center', verticalalignment='center',
+                fontsize=self.__fontsize2)
+
+        # Text artists do not expand data limits automatically. Reserve space
+        # for the hand-drawn range/height scales.
+        x_margin = max((max_X - min_X) * 0.08, 140)
+        y_margin_bottom = max((max_Y - min_Y) * self.__bottom_margin_scale,
+                              tick_len * 4)
+        y_margin_top = max((max_Y - min_Y) * 0.05, 25)
+        ax.set_xlim(min(min_X, ylabel_X) - x_margin, max_X + x_margin)
+        ax.set_ylim(min_Y - y_margin_bottom, max_Y + y_margin_top)
+
+        self.__ax = ax
         return ax, fig, image
     
     # 
@@ -272,11 +294,11 @@ class Plot_2D_slice:
     # set up the colourbar
     #
     def show_color_bar(self,ax, fig,image):
-        save_pos = ax.get_position().bounds
-        fig.colorbar(image, ax=ax, orientation='horizontal', shrink=0.45, 
-                 aspect=50, label='Plasma Freqency (MHz)')
-        new_pos = ax.get_position().bounds
-        ax.set_position(save_pos)
+        cax = fig.add_axes([0.30, self.__colorbar_y, 0.40, 0.04])
+        cbar = fig.colorbar(image, cax=cax, orientation='horizontal',
+                            label='Plasma Frequency (MHz)')
+        cbar.ax.tick_params(labelsize=self.__fontsize1)
+        cbar.ax.xaxis.label.set_size(self.__fontsize2)
     
     #
     # method to display rays
@@ -305,6 +327,14 @@ class Plot_2D_slice:
                       ' in plot_ray_iono_slice')
                 sys.exit()
         ray_handle = []
+        ray_kwargs = kwargs.copy()
+        if 'linewidth' in ray_kwargs:
+            ray_kwargs['linewidth'] = ray_kwargs['linewidth'] * 0.5
+        elif 'lw' in ray_kwargs:
+            ray_kwargs['lw'] = ray_kwargs['lw'] * 0.5
+        else:
+            ray_kwargs['linewidth'] = plt.rcParams['lines.linewidth'] * 0.5
+
         # not the code below assumes that the loop will not execute  print(ray[idx].keys())is ray is
         # an empy list
         for idx in range(len(ray)):
@@ -331,20 +361,7 @@ class Plot_2D_slice:
                 / Plot_2D_slice.__rad_earth
             ray_X = ray_r * np.sin(ray_theta)
             ray_Y = ray_r * np.cos(ray_theta)
-            plt.plot(ray_X, ray_Y)
-            
-        # plt.draw()
-        # plt.pause(0.001)
-        # plt.show()
-            plot_cmd = 'plt.plot(ray_X, ray_Y'
-            for idx in kwargs.keys():
-                if type(kwargs[idx]) == str:
-                    plot_cmd = plot_cmd + ',' + idx + '=' +\
-                        "'" + kwargs[idx] + "'"
-                else:
-                    plot_cmd = plot_cmd + ',' + idx + '=' + str(kwargs[idx])
-            plot_cmd = plot_cmd + ')'
-            h = eval(plot_cmd)
+            h = self.__ax.plot(ray_X, ray_Y, **ray_kwargs)
             ray_handle.append(h)
         # plt.show()
         return ray_handle

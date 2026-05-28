@@ -20,6 +20,15 @@ R12 = 100                    #M R12 index
 
 EXAMPLES_DIR = Path(__file__).resolve().parent
 
+
+def format_datetime_utc(value):
+    return value.strftime('%Y-%m-%dT%H:%MZ')
+
+
+def format_ut(ut):
+    return '{:04d}-{:02d}-{:02d}T{:02d}:{:02d}Z'.format(*ut)
+
+
 df = pnd.read_csv(EXAMPLES_DIR / "run_raytraces.csv")
 pfsq_conv = 80.6163849431291e-12  #M mult. factor to convert elec. density
 
@@ -106,7 +115,8 @@ for index, row in df.iterrows():
                         end_range, range_step, start_ht, end_ht, height_step,
                         ray_path_data,linewidth=1.5, color='1')
 
-    fig_str_a = ' SAMI3  {} UTC  {}MHz   '.format(actual_date.replace(microsecond=0), freq)
+    fig_str_a = ' SAMI3  {}   {}MHz   '.format(
+        format_datetime_utc(actual_date), freq)
     fig_str_b = '   lat = {}, lon = {}, bearing = {}'.format(
                 round(origin_lat,2), round(origin_long,2), round(ray_bear, 2))
 
@@ -230,8 +240,8 @@ for index, row in df.iterrows():
                         ray_path_data,linewidth=1.5, color=[1, 1, 0.99])
 
 
-    fig_str_a = 'IRI {}/{}/{}  {:02d}:{:02d}UT   {}MHz   R12 = {}'.format(
-                UT[1], UT[2], UT[0], UT[3], UT[4], freq, R12)
+    fig_str_a = 'IRI {}   {}MHz   R12 = {}'.format(
+                format_ut(UT), freq, R12)
     fig_str_b = '   lat = {}, lon = {}, bearing = {}'.format(
                 origin_lat, origin_long, ray_bear)
 
