@@ -1,10 +1,30 @@
-# PyLap
+# PyLap (an unsupported experimental fork)
 
 A Python 3 wrapper for the PHaRLAP ionospheric raytracer.
 
 > **Warning:** PyLap is based on the scientific software PHaRLAP and is not meant for operational use as stated on PHaRLAP's website. Any and all risk falls to you if you are using this software.
 
-## About this fork
+## About this fork of a fork
+This is my attempt at getting the 4.7.4-support fork to actually work correctly on more recent python versions (e.g. 3.13), and just work in general. There's lots of issues with the fork that mean it probably only works in very specific use-cases.
+
+Some problems I initially encountered:
+* Use of packages which are removed in Python 3.13 (e.g. cgi)
+* requirements.txt pulls in Numpy, but the code actually needs Numpy <2.0
+* Lots of references to IRI versions (2007, 2012) that aren't in PHaRLAP anymore
+* All the examples were still using IRI2016, for which the data files aren't provided with PHaRLAP anymore.
+* Incorrect calls into ths iri2020 library, breaking things.
+
+I am unapologetically attacking this with Codex, in part as an experiment to see if I can use an LLM for something useful.
+
+Main initial aims are:
+* Support Python 3.10 or newer
+* Support Numpy >2.0
+* Make the examples work.
+* Try and rearrange the repository to more closely align with modern python packaging conventions (if this is possible), and avoid having to set up very specific environment variables for it to work.
+
+Consider this repository to be broken unless this readme gets updated to say otherwise, and consider everything below to probably be wrong in various ways.
+
+## About this fork (from upstream repo)
 
 This is a patched fork of [HamSCI/PyLap](https://github.com/HamSCI/PyLap) maintained for use with [hf-timestd](https://github.com/mijahauan/hf-timestd) and other HF-propagation projects. The upstream version will not build or run correctly against current PHaRLAP (4.7.4) without these patches:
 
@@ -163,4 +183,4 @@ To redo the setup:
 
 ## Contact
 
-For questions or help troubleshooting, email: Devin.diehl@scranton.edu
+I'm not offering support in running this repository right now, but my email is vk5qi@rfhead.net
