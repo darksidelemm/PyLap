@@ -24,18 +24,6 @@ Main initial aims are:
 
 Consider this repository to be broken unless this readme gets updated to say otherwise, and consider everything below to probably be wrong in various ways.
 
-## About this fork (from upstream repo)
-
-This is a patched fork of [HamSCI/PyLap](https://github.com/HamSCI/PyLap) maintained for use with [hf-timestd](https://github.com/mijahauan/hf-timestd) and other HF-propagation projects. The upstream version will not build or run correctly against current PHaRLAP (4.7.4) without these patches:
-
-- **PHaRLAP 4.7.4 support** — upstream targets 4.5.x; this fork's `setup.py` links against 4.7.4 static libraries and gracefully skips legacy IRI modules (`iri2007`, `iri2012`) when their `.a` files are absent.
-- **Cross-platform builds** — adds macOS arm64 and macOS x86_64 alongside Linux x86_64 (upstream is Linux-only).
-- **Unified gfortran build** — Intel Fortran redistributable is no longer required; Linux and macOS both build against gfortran, eliminating a significant install-time hurdle.
-- **GCC 14+ compatibility** — adds `-Wno-error=incompatible-pointer-types` so builds succeed on Debian 13/trixie and other distros that ship GCC 14 (which promotes this warning to an error).
-- **Multi-hop stride fix in `raytrace_2d.c`** — the `ray_data` C-array hop stride was `num_rays × 9`; corrected to `num_rays × 24` so fields past hop 0 are read from the right offsets under PHaRLAP 4.7.4.
-- **`iri2016` module now calls IRI-2020** — PHaRLAP 4.7.4 replaced IRI-2016 internals with IRI-2020; the fork's wrapper was updated to match.
-- **Fortran SAVE-variable segfault workaround (caller-side note)** — repeated `raytrace_2d` calls can crash due to persistent Fortran state; make a single call with `nhops=max_hops` and iterate hops in Python.
-- **Ne unit convention (caller-side note)** — IRI-2020 returns electron density in m⁻³ but `raytrace_2d` expects cm⁻³; scale by 10⁻⁶ before passing the grid.
 
 ## Requirements
 
@@ -45,12 +33,6 @@ This is a patched fork of [HamSCI/PyLap](https://github.com/HamSCI/PyLap) mainta
 - **PHaRLAP:** 4.7.4 required for raytracing (request access from DST Australia — see below)
 - **gfortran:** Required to build PyLap and the IRI-2020 Python package — `apt install gfortran` on Linux, `brew install gcc` on macOS. Intel Fortran is **not** required (removed in this fork).
 
-If you specifically want the final NumPy 1.x line, install it before building:
-
-```bash
-python -m pip install "numpy==1.26.4"
-python -m pip install --no-build-isolation .
-```
 
 ## Manual Setup
 
@@ -98,11 +80,6 @@ python -m pip install --upgrade pip setuptools wheel
 python -m pip install -r requirements.txt
 ```
 
-If you want NumPy 1.x rather than NumPy 2.x, pin it before building:
-
-```bash
-python -m pip install "numpy==1.26.4"
-```
 
 ### 5. Build and Install PyLap
 
@@ -154,3 +131,19 @@ iono_pf_grid, iono_pf_grid_5, collision_freq, irreg, iono_te_grid = \
 ## Contact
 
 I'm not offering support in running this repository right now, but my email is vk5qi@rfhead.net
+
+
+## Various bits from the previous fork's readme
+
+### About this fork (from upstream repo)
+
+This is a patched fork of [HamSCI/PyLap](https://github.com/HamSCI/PyLap) maintained for use with [hf-timestd](https://github.com/mijahauan/hf-timestd) and other HF-propagation projects. The upstream version will not build or run correctly against current PHaRLAP (4.7.4) without these patches:
+
+- **PHaRLAP 4.7.4 support** — upstream targets 4.5.x; this fork's `setup.py` links against 4.7.4 static libraries and gracefully skips legacy IRI modules (`iri2007`, `iri2012`) when their `.a` files are absent.
+- **Cross-platform builds** — adds macOS arm64 and macOS x86_64 alongside Linux x86_64 (upstream is Linux-only).
+- **Unified gfortran build** — Intel Fortran redistributable is no longer required; Linux and macOS both build against gfortran, eliminating a significant install-time hurdle.
+- **GCC 14+ compatibility** — adds `-Wno-error=incompatible-pointer-types` so builds succeed on Debian 13/trixie and other distros that ship GCC 14 (which promotes this warning to an error).
+- **Multi-hop stride fix in `raytrace_2d.c`** — the `ray_data` C-array hop stride was `num_rays × 9`; corrected to `num_rays × 24` so fields past hop 0 are read from the right offsets under PHaRLAP 4.7.4.
+- **`iri2016` module now calls IRI-2020** — PHaRLAP 4.7.4 replaced IRI-2016 internals with IRI-2020; the fork's wrapper was updated to match.
+- **Fortran SAVE-variable segfault workaround (caller-side note)** — repeated `raytrace_2d` calls can crash due to persistent Fortran state; make a single call with `nhops=max_hops` and iterate hops in Python.
+- **Ne unit convention (caller-side note)** — IRI-2020 returns electron density in m⁻³ but `raytrace_2d` expects cm⁻³; scale by 10⁻⁶ before passing the grid.
