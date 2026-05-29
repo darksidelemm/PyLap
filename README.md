@@ -32,6 +32,7 @@ Consider this repository to be broken unless this readme gets updated to say oth
 - **NumPy:** 1.26.4 or 2.x
 - **PHaRLAP:** 4.7.4 required for raytracing (request access from DST Australia — see below)
 - **gfortran:** Required to build PyLap and the IRI-2020 Python package — `apt install gfortran` on Linux, `brew install gcc` on macOS. Intel Fortran is **not** required (removed in this fork).
+- **parfor/Ray:** Required only for parallel ionosphere generation with `num_workers > 1` or `--iono-workers`; installed by `requirements.txt`.
 
 
 ## Manual Setup

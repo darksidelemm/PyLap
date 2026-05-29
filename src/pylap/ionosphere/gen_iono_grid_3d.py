@@ -157,9 +157,40 @@ from pylap.iri2016 import iri2016
 import iri2020 as iri2020_pkg
 import datetime
 
+
+def _parfor_gmap():
+    try:
+        from parfor import gmap
+    except ImportError as exc:
+        raise RuntimeError(
+            "Parallel ionosphere generation requires the 'parfor' package. "
+            "Install parfor or call gen_iono_grid_3d with num_workers=1."
+        ) from exc
+    return gmap
+
+
+def _warm_iri2020(UT, lat, lon, ht_min, ht_inc, num_ht):
+    height_range = [ht_min, ht_min + (num_ht - 1) * ht_inc, ht_inc]
+    dt_time = datetime.datetime(UT[0], UT[1], UT[2], UT[3], UT[4])
+    iri2020_pkg.IRI(dt_time, height_range, lat, lon)
+
+
+def _gen_iono_lat_slice(job):
+    lat_idx, lat, args = job
+    iono_pf_subgrid, iono_pf_subgrid_5, collision_freq_subgrid = \
+        gen_iono_subgrid(lat, *args)
+    return lat_idx, iono_pf_subgrid, iono_pf_subgrid_5, collision_freq_subgrid
+
+
+def _gen_bfield_lat_slice(job):
+    lat_idx, lat, args = job
+    bx_subgrid, by_subgrid, bz_subgrid = gen_Bfield_subgrid(lat, *args)
+    return lat_idx, bx_subgrid, by_subgrid, bz_subgrid
+
+
 def gen_iono_grid_3d(UT, R12, iono_grid_parms,
                      geomag_grid_parms, doppler_flag, 
-                     profile_type='iri', *args):
+                     profile_type='iri', *args, num_workers=None):
     pfsq_conv = 80.6163849431291e-12;  #% mult. factor to convert electron density
 #                                      % in m^-3 to plasma freq. squared in MHz^2
 
@@ -207,29 +238,51 @@ def gen_iono_grid_3d(UT, R12, iono_grid_parms,
     iono_pf_grid = np.zeros((int(num_lat), int(num_lon), int(num_ht))) * np.nan
     iono_pf_grid_5 = np.zeros((int(num_lat), int(num_lon), int(num_ht))) * np.nan
     collision_freq = np.zeros((int(num_lat), int(num_lon), int(num_ht))) * np.nan
-    Bx = np.zeros((B_num_lat, B_num_lon, B_num_ht))
-    By = np.zeros((B_num_lat, B_num_lon, B_num_ht))
-    Bz = np.zeros((B_num_lat, B_num_lon, B_num_ht))
+    Bx = np.zeros((int(B_num_lat), int(B_num_lon), int(B_num_ht)))
+    By = np.zeros((int(B_num_lat), int(B_num_lon), int(B_num_ht)))
+    Bz = np.zeros((int(B_num_lat), int(B_num_lon), int(B_num_ht)))
 
 #   % generate ionospheric grids
 #   %
     lat_max = lat_min + (num_lat - 1) * lat_inc
     lon_max = lon_min + (num_lon - 1) * lon_inc
     ht_max = ht_min + (num_ht - 1) * ht_inc
-    height_arr = np.arange(ht_min, ht_max, ht_inc, dtype = float)
-    lat_idx = 0
-    for lat_idx in range(int(num_lat) - 1, -1, -1):
-        lat = lat_min + lat_idx * lat_inc
-        # % generate ionosphere gridded in longitude and height
-        [iono_pf_subgrid, iono_pf_subgrid_5, collision_freq_subgrid] = \
-        gen_iono_subgrid(lat, lon_min, lon_inc, lon_max, ht_min, ht_inc, 
-                        ht_max, R12, UT, profile_type, doppler_flag, 
-                        iri_options, fllhc_flag)
-        
-        # % populate the ionospheric (lat,lon,height) grids
-        iono_pf_grid[lat_idx, :, :] = iono_pf_subgrid
-        iono_pf_grid_5[lat_idx, :, :] = iono_pf_subgrid_5
-        collision_freq[lat_idx, :, :] = collision_freq_subgrid
+    if num_workers is not None and num_workers > 1:
+        gmap = _parfor_gmap()
+        if profile_type.lower() == 'iri2020':
+            _warm_iri2020(UT, lat_min, lon_min, ht_min, ht_inc, int(num_ht))
+        iono_args = (
+            lon_min, lon_inc, lon_max, ht_min, ht_inc, ht_max, R12, UT,
+            profile_type, doppler_flag, iri_options, fllhc_flag,
+        )
+        iono_jobs = [
+            (lat_idx, lat_min + lat_idx * lat_inc, iono_args)
+            for lat_idx in range(int(num_lat))
+        ]
+        for lat_idx, iono_pf_subgrid, iono_pf_subgrid_5, collision_freq_subgrid in gmap(
+            _gen_iono_lat_slice,
+            iono_jobs,
+            total=len(iono_jobs),
+            n_processes=int(num_workers),
+            yield_ordered=False,
+            desc="Generating ionosphere",
+        ):
+            iono_pf_grid[lat_idx, :, :] = iono_pf_subgrid
+            iono_pf_grid_5[lat_idx, :, :] = iono_pf_subgrid_5
+            collision_freq[lat_idx, :, :] = collision_freq_subgrid
+    else:
+        for lat_idx in range(int(num_lat) - 1, -1, -1):
+            lat = lat_min + lat_idx * lat_inc
+            # % generate ionosphere gridded in longitude and height
+            [iono_pf_subgrid, iono_pf_subgrid_5, collision_freq_subgrid] = \
+            gen_iono_subgrid(lat, lon_min, lon_inc, lon_max, ht_min, ht_inc, 
+                            ht_max, R12, UT, profile_type, doppler_flag, 
+                            iri_options, fllhc_flag)
+
+            # % populate the ionospheric (lat,lon,height) grids
+            iono_pf_grid[lat_idx, :, :] = iono_pf_subgrid
+            iono_pf_grid_5[lat_idx, :, :] = iono_pf_subgrid_5
+            collision_freq[lat_idx, :, :] = collision_freq_subgrid
         
 #   %
 #   % generate magnetic field grids
@@ -237,18 +290,38 @@ def gen_iono_grid_3d(UT, R12, iono_grid_parms,
     B_lat_max = B_lat_min + (B_num_lat - 1) * B_lat_inc
     B_lon_max = B_lon_min + (B_num_lon - 1) * B_lon_inc
     B_ht_max = B_ht_min + (B_num_ht - 1) * B_ht_inc
-    for B_lat_idx in range(int(B_num_lat) - 1, -1, -1): 
-        lat = B_lat_min + B_lat_idx * B_lat_inc
+    if num_workers is not None and num_workers > 1:
+        bfield_args = (
+            B_lon_min, B_lon_inc, B_lon_max, B_ht_min, B_ht_inc, B_ht_max, UT,
+        )
+        bfield_jobs = [
+            (B_lat_idx, B_lat_min + B_lat_idx * B_lat_inc, bfield_args)
+            for B_lat_idx in range(int(B_num_lat))
+        ]
+        for B_lat_idx, Bx_subgrid, By_subgrid, Bz_subgrid in gmap(
+            _gen_bfield_lat_slice,
+            bfield_jobs,
+            total=len(bfield_jobs),
+            n_processes=int(num_workers),
+            yield_ordered=False,
+            desc="Generating geomagnetic field",
+        ):
+            Bx[B_lat_idx, :, :] = Bx_subgrid
+            By[B_lat_idx, :, :] = By_subgrid
+            Bz[B_lat_idx, :, :] = Bz_subgrid
+    else:
+        for B_lat_idx in range(int(B_num_lat) - 1, -1, -1): 
+            lat = B_lat_min + B_lat_idx * B_lat_inc
 
-    #% generate magnetic field gridded in longitude and height
-        [Bx_subgrid, By_subgrid, Bz_subgrid] = \
-	    gen_Bfield_subgrid(lat, B_lon_min, B_lon_inc, B_lon_max, 
-	                   B_ht_min, B_ht_inc, B_ht_max, UT)
+        #% generate magnetic field gridded in longitude and height
+            [Bx_subgrid, By_subgrid, Bz_subgrid] = \
+	        gen_Bfield_subgrid(lat, B_lon_min, B_lon_inc, B_lon_max, 
+	                       B_ht_min, B_ht_inc, B_ht_max, UT)
 
-    #% populate the magnetic field (lat,lon,height) grids
-        Bx[B_lat_idx, :, :] = Bx_subgrid
-        By[B_lat_idx, :, :] = By_subgrid
-        Bz[B_lat_idx, :, :] = Bz_subgrid
+        #% populate the magnetic field (lat,lon,height) grids
+            Bx[B_lat_idx, :, :] = Bx_subgrid
+            By[B_lat_idx, :, :] = By_subgrid
+            Bz[B_lat_idx, :, :] = Bz_subgrid
 
     return iono_pf_grid, iono_pf_grid_5, collision_freq, Bx, By, Bz
 
@@ -258,8 +331,10 @@ def gen_iono_grid_3d(UT, R12, iono_grid_parms,
 # %
 def gen_Bfield_subgrid(lat, B_lon_min, B_lon_inc, B_lon_max, 
 		                   B_ht_min, B_ht_inc, B_ht_max, UT):
-    lon_values = np.arange(B_lon_min, B_lon_max + B_lon_inc / 2, B_lon_inc)
-    height_values = np.arange(B_ht_min, B_ht_max + B_ht_inc / 2, B_ht_inc)
+    num_lon = round((B_lon_max - B_lon_min) / B_lon_inc) + 1
+    num_height = round((B_ht_max - B_ht_min) / B_ht_inc) + 1
+    lon_values = B_lon_min + np.arange(num_lon) * B_lon_inc
+    height_values = B_ht_min + np.arange(num_height) * B_ht_inc
     sizeX = len(lon_values)
     sizeY = len(height_values)
     Bx_subgrid = np.zeros((sizeX, sizeY))

@@ -135,5 +135,8 @@ setup(
     package_dir={'': 'src'},
     package_data={'pylap': ['data/*.dat']},
     python_requires='>=3.9',
+    extras_require={
+        'parallel': ['parfor'],
+    },
     ext_modules=native_modules,
 )

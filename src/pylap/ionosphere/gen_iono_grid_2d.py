@@ -175,10 +175,84 @@ import datetime
 #		     max_range, num_range, range_inc, start_height, ...
 #		     height_inc, num_heights, kp, doppler_flag, ...
 #		     profile_type, varargin)
+
+
+def _parfor_gmap():
+    try:
+        from parfor import gmap
+    except ImportError as exc:
+        raise RuntimeError(
+            "Parallel ionosphere generation requires the 'parfor' package. "
+            "Install parfor or call gen_iono_grid_2d with num_workers=1."
+        ) from exc
+    return gmap
+
+
+def _warm_iri2020(UT, lat, lon, start_height, height_inc, num_heights):
+    height_range = [
+        start_height,
+        start_height + (num_heights - 1) * height_inc,
+        height_inc,
+    ]
+    dt_time = datetime.datetime(UT[0], UT[1], UT[2], UT[3], UT[4])
+    iri2020_pkg.IRI(dt_time, height_range, lat, lon)
+
+
+def _gen_iono_range_slice(job):
+    rng, args = job
+    (
+        re_eq, range_inc, azim, origin_lat_gc, origin_lon_gc, num_heights,
+        start_height, height_inc, UT, R12, profile_type, iri_options,
+        doppler_flag, fllhc_flag, height_arr, kp,
+    ) = args
+    pfsq_conv = 80.6163849431291e-12
+
+    range_rng = rng * range_inc
+    lat_gc, lon_gc = raz2latlon.raz2latlon(
+        range_rng * 1000, azim, origin_lat_gc, origin_lon_gc
+    )
+    xcart = re_eq * np.cos(np.radians(lat_gc)) * np.cos(np.radians(lon_gc))
+    ycart = re_eq * np.cos(np.radians(lat_gc)) * np.sin(np.radians(lon_gc))
+    zcart = re_eq * np.sin(np.radians(lat_gc))
+    lat, lon, _height = wgs84_xyz2llh.wgs84_xyz2llh(xcart, ycart, zcart)
+
+    iono_pf_prof, iono_pf_prof5, _iono_extra, T_e, T_ion = gen_iono_profile(
+        lat, lon, num_heights, start_height, height_inc, origin_lat_gc,
+        origin_lon_gc, UT, R12, profile_type, iri_options, doppler_flag,
+        fllhc_flag,
+    )
+
+    lat_arr = lat * np.ones_like(height_arr)
+    lon_arr = lon * np.ones_like(height_arr)
+    if R12 == -1:
+        neutral_dens, _temp = nrlmsise00(lat_arr, lon_arr, height_arr, UT)
+    else:
+        f107 = 63.75 + R12 * (0.728 + R12 * 0.00089)
+        neutral_dens, _temp = nrlmsise00(
+            lat_arr, lon_arr, height_arr, UT, f107, f107, 4
+        )
+
+    elec_dens = iono_pf_prof ** 2 / pfsq_conv
+    collision = eff_coll_freq.eff_coll_freq(T_e, T_ion, elec_dens, neutral_dens)
+
+    if doppler_flag:
+        dop_spread = dop_spread_eq(lat, lon, UT, R12)
+    else:
+        dop_spread = 0
+
+    mag_field = igrf2016(lat, lon, UT, 300)
+    dip = mag_field[7]
+    dec = mag_field[9]
+    strength = irreg_strength(lat, lon, UT, kp)
+    irreg_parms = np.array([strength, dip, dec, dop_spread])
+
+    return rng, iono_pf_prof, iono_pf_prof5, collision, irreg_parms, T_e
+
+
 def gen_iono_grid_2d(origin_lat, origin_lon, R12, UT, azim, 
             max_range, num_range, range_inc, start_height,
             height_inc, num_heights, kp, doppler_flag,
-            profile_type = 'iri', *args):
+            profile_type = 'iri', *args, num_workers=None):
 
     re_eq = 6378137.0                 #M equatorial radius of Earth
     # dtor = np.radians(1.0)               #M degrees to radians conversion
@@ -230,75 +304,43 @@ def gen_iono_grid_2d(origin_lat, origin_lon, R12, UT, azim,
     ht = re_eq - re_wgs84
     origin_lat_gc = wgs842gc_lat.wgs842gc_lat(origin_lat, ht)
     origin_lon_gc = origin_lon
-    #M loop over range where range is arc length measured on a spherical surface
-    #M of radius equal to the Earth's equatorial radius)
-    #M   parfor rng = 1:num_range
-    #
-    # note original code invoked parall*el process. Might add later after working
-    #parfor rng = 1:num_range
-    for rng in range(0,num_range):
-        print('gen_iono_grid_2d rng loop {}'.format(rng))
-        
-        #M convert range and azimuth to geodetic lat, lon
-        range_rng = rng * range_inc
-        lat_gc, lon_gc = raz2latlon.raz2latlon(range_rng * 1000, azim,
-                                               origin_lat_gc,  origin_lon_gc)
-        	                         
-        xcart = re_eq * np.cos(np.radians(lat_gc)) * np.cos(np.radians(lon_gc))
-        ycart = re_eq * np.cos(np.radians(lat_gc)) * np.sin(np.radians(lon_gc))
-        zcart = re_eq * np.sin(np.radians(lat_gc))
-        lat, lon, hieght = wgs84_xyz2llh.wgs84_xyz2llh(xcart, ycart, zcart)
-                #M generate the ionospheric profile
-        print(' in gen_iono_grid_2d ln 250 call gen_iono_profile')
-        iono_pf_prof, iono_pf_prof5, iono_extra, T_e, T_ion = \
-        gen_iono_profile(lat, lon, num_heights, start_height, 
-        			 height_inc, origin_lat_gc, origin_lon_gc, 
-        			 UT, R12, profile_type, iri_options, 
-        			 doppler_flag, fllhc_flag)
+    if num_workers is not None and num_workers > 1:
+        gmap = _parfor_gmap()
+        if profile_type.lower() == 'iri2020':
+            _warm_iri2020(
+                UT, origin_lat, origin_lon, start_height, height_inc,
+                num_heights,
+            )
+        range_args = (
+            re_eq, range_inc, azim, origin_lat_gc, origin_lon_gc,
+            num_heights, start_height, height_inc, UT, R12, profile_type,
+            iri_options, doppler_flag, fllhc_flag, height_arr, kp,
+        )
+        range_jobs = [(rng, range_args) for rng in range(num_range)]
+        results = gmap(
+            _gen_iono_range_slice,
+            range_jobs,
+            total=len(range_jobs),
+            n_processes=int(num_workers),
+            yield_ordered=False,
+            desc="Generating ionosphere",
+        )
+    else:
+        results = (_gen_iono_range_slice((
+            rng,
+            (
+                re_eq, range_inc, azim, origin_lat_gc, origin_lon_gc,
+                num_heights, start_height, height_inc, UT, R12, profile_type,
+                iri_options, doppler_flag, fllhc_flag, height_arr, kp,
+            ),
+        )) for rng in range(num_range))
 
+    for rng, iono_pf_prof, iono_pf_prof5, collision, irreg_parms, T_e in results:
         iono_pf_grid[:,rng] = iono_pf_prof
         iono_pf_grid_5[:,rng] = iono_pf_prof5
         iono_te_grid[:,rng] = T_e
-        
-        #M neutral densities end
-        lat_arr = lat * np.ones_like(height_arr)
-        lon_arr = lon * np.ones_like(height_arr)
-        if R12 == -1:
-            neutral_dens, temp = nrlmsise00(lat_arr, lon_arr,
-                                                       height_arr, UT)
-        else:
-            #M calculate f10.7 : see Davies, "Ionospheric Radio", 1990, pp442
-            f107 = 63.75 + R12*(0.728 + R12*0.00089)
-            neutral_dens, temp = nrlmsise00(lat_arr, lon_arr,
-                                        height_arr, UT,  f107, f107, 4)
-
-
-        #M calculate collision frequency
-        elec_dens = iono_pf_prof ** 2 / pfsq_conv
-        collision_freq[:,rng] = \
-        eff_coll_freq.eff_coll_freq(T_e, T_ion, elec_dens, neutral_dens)
-
-        #M call dop_spread_eq to generate doppler spread due to traversing the
-        #M equatorial region - we need to determine the R12 index to do this
-        if doppler_flag:
-            dop_spread = dop_spread_eq(lat, lon, UT, R12)
-        else:
-            dop_spread = 0
-    #
-        
-        #M call geomag field routine at phase screen height of irregularities
-        long = lon
-        if long < 0: long = long + 360 
-        mag_field = igrf2016(lat, lon, UT, 300)
-        dip = mag_field[7]
-        dec = mag_field[9]
-        
-        #M generate the irregularity strength - call irreg_strength
-        strength = irreg_strength(lat, lon, UT, kp)
-        #M fill the irregularities parameter array
-        irreg_parms = np.array([strength, dip, dec, dop_spread])
-        
-        irreg[:,rng] = irreg_parms   
+        collision_freq[:,rng] = collision
+        irreg[:,rng] = irreg_parms
     
     return iono_pf_grid, iono_pf_grid_5, collision_freq, irreg, iono_te_grid
 
