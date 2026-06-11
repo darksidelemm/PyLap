@@ -30,7 +30,6 @@
 #     Initial Version
 #
 import math
-from turtle import shape
 import numpy as np  # py
 import time
 import ctypes as c
@@ -111,7 +110,7 @@ collision_freq = np.zeros((num_lat, num_lon, num_ht))
 #   # generate ionospheric electron density profile
 #   lat = lat_start + (ii-1)*lat_inc
 #   lon = origin_long
-#   [iono, iono_extra] = iri2016(lat, lon, R12, UT, ht_start, ht_inc, num_ht)
+#   [iono, iono_extra] = iri2020(lat, lon, R12, UT, ht_start, ht_inc, num_ht)
 #   en_profile = iono(1, :) / 1e6      # convert to electrons per cm^3
 #   idx = find(en_profile < 0)
 #   en_profile(idx) = 0
@@ -222,7 +221,7 @@ irreg = np.zeros((4, num_range))
 #   range = (ii - 1)*range_inc*1000
 #   [lat, lon] = raz2latlon(range, azim, origin_lat, origin_long, 'wgs84')
 #
-#   [iono, iono_extra] = iri2016(lat, origin_long, R12, UT, ht_start, ht_inc, ...
+#   [iono, iono_extra] = iri2020(lat, origin_long, R12, UT, ht_start, ht_inc, ...
 #                                num_ht)
 #   en_profile = iono(1, :) / 1e6      # convert to electrons per cm^3
 #   idx = find(en_profile < 0)

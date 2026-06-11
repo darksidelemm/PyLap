@@ -11,12 +11,37 @@ it is bassed on plot_ray_iono_slice.m
 It enables varialbes to be saved between using methods
 """
 import numpy as np
+import os
 import matplotlib
-matplotlib.use('QtAgg')
+if "MPLBACKEND" not in os.environ:
+    matplotlib.use('QtAgg')
 import matplotlib.pyplot as plt
 import sys
 import platform
-from qtpy.QtWidgets import QApplication
+
+
+class _ScreenGeometry:
+    def __init__(self, width, height):
+        self._width = width
+        self._height = height
+
+    def width(self):
+        return self._width
+
+    def height(self):
+        return self._height
+
+
+def _screen_geometry():
+    if matplotlib.get_backend().lower() == "agg":
+        return 96.0, _ScreenGeometry(1440, 900)
+    try:
+        from qtpy.QtWidgets import QApplication
+        app = QApplication.instance() or QApplication(sys.argv)
+        screen = app.screens()[0]
+        return screen.physicalDotsPerInch(), screen.geometry()
+    except Exception:
+        return 96.0, _ScreenGeometry(1440, 900)
 
 class Plot_2D_slice:
     __rad_earth  = 6371.  # earth radius in km
@@ -27,10 +52,7 @@ class Plot_2D_slice:
     # such as font sizes and size of image on scree
     def __init__(self, axis_font_scale=0.55, bottom_margin_scale=0.05,
                  colorbar_y=0.31):
-        app = QApplication.instance() or QApplication(sys.argv)
-        screen = app.screens()[0]
-        dpi= screen.physicalDotsPerInch()
-        scrsz = screen.geometry()
+        dpi, scrsz = _screen_geometry()
         self.__scrsz_height = int(scrsz.height() * 0.6)
         self.__scrsz_width = int(scrsz.width() * 0.9)
         op_sys = platform.system()

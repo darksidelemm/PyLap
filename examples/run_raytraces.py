@@ -12,10 +12,12 @@ import matplotlib.pyplot as plt
 import datetime as dt
 import pandas as pnd
 import os
+import sys
 from pathlib import Path
 from geographiclib.geodesic import Geodesic
 geod = Geodesic.WGS84
-plt.switch_backend('QtAgg')
+if "MPLBACKEND" not in os.environ:
+    plt.switch_backend('QtAgg')
 R12 = 100                    #M R12 index
 
 EXAMPLES_DIR = Path(__file__).resolve().parent
@@ -29,7 +31,12 @@ def format_ut(ut):
     return '{:04d}-{:02d}-{:02d}T{:02d}:{:02d}Z'.format(*ut)
 
 
-df = pnd.read_csv(EXAMPLES_DIR / "run_raytraces.csv")
+input_csv = EXAMPLES_DIR / "run_raytraces.csv"
+if not input_csv.exists():
+    print(f"Skipping run_raytraces: optional input file not found: {input_csv}")
+    sys.exit(0)
+
+df = pnd.read_csv(input_csv)
 pfsq_conv = 80.6163849431291e-12  #M mult. factor to convert elec. density
 
 

@@ -101,9 +101,8 @@ def create_module(name, libraries):
     print(f'  BUILD pylap.{name}')
 
 
-# PHaRLAP 4.7.4: IRI consolidated into iri2020.  Modules that required
-# the legacy iri2007/iri2012/iri2016 archives are updated accordingly;
-# those that only existed as thin wrappers for the legacy models are skipped.
+# PHaRLAP 4.7.4: IRI consolidated into iri2020. Modules that require
+# the legacy iri2007/iri2012 archives are skipped when those libs are absent.
 print(f'\nConfiguring pyLAP for PHaRLAP on {_sys}/{_machine} (lib/{_lib_subdir})\n')
 
 create_module('abso_bg',       _libs('propagation', 'maths', 'iri2020'))
@@ -114,10 +113,10 @@ create_module('ground_fs_loss',_libs('propagation'))
 create_module('igrf2007',      _libs('maths', 'iri2007'))
 create_module('igrf2011',      _libs('maths', 'iri2012'))
 create_module('igrf2016',      _libs('maths', 'iri2020'))
-# Standalone IRI wrappers — skipped for legacy versions not in 4.7.4
+# Standalone IRI wrappers: legacy versions are skipped on stock PHaRLAP 4.7.4.
 create_module('iri2007',       _libs('iri2007'))
 create_module('iri2012',       _libs('iri2012'))
-create_module('iri2016',       _libs('iri2020'))
+create_module('iri2020',       _libs('iri2020'))
 create_module('irreg_strength',_libs('propagation', 'iri2020'))
 create_module('nrlmsise00',    _libs('maths', 'iri2020'))
 create_module('raytrace_2d',   _libs('propagation', 'maths'))

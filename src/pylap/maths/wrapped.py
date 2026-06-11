@@ -10,7 +10,7 @@ def nrlmsiseoo():
     pass
 def irreg_strength():
     pass
-def iri2016():
+def iri2020():
     pass
 def iri2012():
     pass

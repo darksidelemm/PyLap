@@ -66,20 +66,20 @@
 #M   igrf2011            - International Geomagnetic Reference Field (distributed
 #M                         with IRI2012).
 #M   igrf2016            - International Geomagnetic Reference Field (distributed
-#M                         with IRI2016).
+#M                         with IRI2020).
 #M   iri2007             - International Reference Ionosphere (2007)
 #M   iri2012             - International Reference Ionosphere (2012) 
-#M   iri2016             - International Reference Ionosphere (2016) 
+#M   iri2020             - International Reference Ionosphere (2016) 
 #M   iri2012_firi_interp - calls International Reference Ionosphere (2012)
 #M                         with FIRI rocketsonde-based lower ionosphere and
 #M                         performs interpolation/smooth to remove discontinuity
-#M   iri2016_firi_interp - calls International Reference Ionosphere (2016)
+#M   iri2020_firi_interp - calls International Reference Ionosphere (2016)
 #M                         with FIRI rocketsonde-based lower ionosphere and
 #M                         performs interpolation/smooth to remove discontinuity
 #M   irreg_strength      - simple model of irregularity strength in the
 #M                         equatorial and auroral regions
 #M   land_sea            - returns land or sea for given location on Earth
-#M   nrlmsise00          - NRLMSISe-00 model atmos. (distributed with IRI2016)
+#M   nrlmsise00          - NRLMSISe-00 model atmos. (distributed with IRI2020)
 #M   noise_ccir          - CCIR (now ITU) environmental noise model
 #M   plot_ray_iono_slice - plots ionospheric slice in an arc (to preserve
 #M                         Earth geometry) and overplots rays

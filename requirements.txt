@@ -9,7 +9,6 @@ netCDF4
 tqdm
 parfor
 cartopy
-iri2020 @ git+https://github.com/space-physics/iri2020.git
 
 # System packages still need to be installed outside pip:
 # sudo apt-get install gfortran

@@ -27,7 +27,7 @@ configure_pharlap()
 _NATIVE_MODULES = {
     "abso_bg", "dop_spread_eq", "ground_bs_loss", "ground_fs_loss",
     "igrf2007", "igrf2011", "igrf2016",
-    "iri2007", "iri2012", "iri2016",
+    "iri2007", "iri2012", "iri2020",
     "irreg_strength", "nrlmsise00",
     "raytrace_2d", "raytrace_2d_sp",
     "raytrace_3d", "raytrace_3d_sp",

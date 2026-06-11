@@ -11,8 +11,8 @@ Some problems I initially encountered:
 * Use of packages which are removed in Python 3.13 (e.g. cgi)
 * Older versions assumed Numpy <2.0
 * Lots of references to IRI versions (2007, 2012) that aren't in PHaRLAP anymore
-* All the examples were still using IRI2016, for which the data files aren't provided with PHaRLAP anymore.
-* Incorrect calls into ths iri2020 library, breaking things.
+* The examples and wrappers mixed legacy IRI names with PHaRLAP 4.7.4's IRI-2020 library.
+* Incorrect calls into the IRI-2020 wrapper, breaking things.
 
 I am unapologetically attacking this with Codex, in part as an experiment to see if I can use an LLM for something useful.
 
@@ -31,7 +31,7 @@ Consider this repository to be broken unless this readme gets updated to say oth
 - **Python:** 3.9+
 - **NumPy:** 1.26.4 or 2.x
 - **PHaRLAP:** 4.7.4 required for raytracing (request access from DST Australia — see below)
-- **gfortran:** Required to build PyLap and the IRI-2020 Python package — `apt install gfortran` on Linux, `brew install gcc` on macOS. Intel Fortran is **not** required (removed in this fork).
+- **gfortran:** Required to build PyLap — `apt install gfortran` on Linux, `brew install gcc` on macOS. Intel Fortran is **not** required (removed in this fork).
 - **parfor/Ray:** Required only for parallel ionosphere generation with `num_workers > 1` or `--iono-workers`; installed by `requirements.txt`.
 
 
@@ -81,7 +81,6 @@ python -m pip install --upgrade pip setuptools wheel
 python -m pip install -r requirements.txt
 ```
 
-
 ### 5. Build and Install PyLap
 
 ```bash
@@ -104,14 +103,14 @@ python examples/ray_test1.py
 
 ## IRI-2020 Ionosphere Model
 
-PyLap now supports IRI-2020 via the `iri2020` Python package. This works **independently of PHaRLAP** for ionosphere generation.
+PyLap supports IRI-2020 through PHaRLAP 4.7.4's bundled `libiri2020` library. The standalone `iri2020` Python package is not used.
 
 ### Supported Profile Types
 
 | Profile Type | Description |
 |--------------|-------------|
-| `'iri2020'` | IRI-2020 model (standalone, no PHaRLAP needed) |
-| `'iri'` or `'iri2016'` | Compatibility names backed by PHaRLAP 4.7.4's IRI-2020 library |
+| `'iri2020'` | IRI-2020 model backed by PHaRLAP 4.7.4 |
+| `'iri'` | Compatibility name backed by PHaRLAP 4.7.4's IRI-2020 library |
 | `'firi'` | Compatibility FIRI path, backed by the available PHaRLAP 4.7.4 libraries |
 
 ### Example Usage
@@ -145,6 +144,6 @@ This is a patched fork of [HamSCI/PyLap](https://github.com/HamSCI/PyLap) mainta
 - **Unified gfortran build** — Intel Fortran redistributable is no longer required; Linux and macOS both build against gfortran, eliminating a significant install-time hurdle.
 - **GCC 14+ compatibility** — adds `-Wno-error=incompatible-pointer-types` so builds succeed on Debian 13/trixie and other distros that ship GCC 14 (which promotes this warning to an error).
 - **Multi-hop stride fix in `raytrace_2d.c`** — the `ray_data` C-array hop stride was `num_rays × 9`; corrected to `num_rays × 24` so fields past hop 0 are read from the right offsets under PHaRLAP 4.7.4.
-- **`iri2016` module now calls IRI-2020** — PHaRLAP 4.7.4 replaced IRI-2016 internals with IRI-2020; the fork's wrapper was updated to match.
+- **`iri2020` module wraps IRI-2020** — PHaRLAP 4.7.4 ships IRI-2020 as the supported IRI implementation, and the Python wrapper now exposes it under the same name.
 - **Fortran SAVE-variable segfault workaround (caller-side note)** — repeated `raytrace_2d` calls can crash due to persistent Fortran state; make a single call with `nhops=max_hops` and iterate hops in Python.
 - **Ne unit convention (caller-side note)** — IRI-2020 returns electron density in m⁻³ but `raytrace_2d` expects cm⁻³; scale by 10⁻⁶ before passing the grid.

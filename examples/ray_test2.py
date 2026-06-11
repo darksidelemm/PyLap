@@ -4,7 +4,7 @@
 #
 # Purpose :
 #   Example of using raytrace_2d for a single ray. Non-default input ray state
-#   vector examples are also included. IRI2016 used to generate the ionosphere.
+#   vector examples are also included. IRI2020 used to generate the ionosphere.
 #
 # Calling sequence :
 #   ray_test2
@@ -39,7 +39,7 @@
 #      More efficient handling of ionospheric grids in call to raytrace_2d 
 #
 #   V2.5  M.A. Cervera  02/05/2016
-#      Updated to use IRI2016
+#      Updated to use IRI2020
 #
 #   V2.6  M.A. Cervera  20/05/2016
 #      Updated to use multi-threaded raytrace_2d
@@ -47,6 +47,7 @@
 import numpy as np  # py
 import time
 import ctypes as c
+import os
 
 
 from pylap.raytrace_2d import raytrace_2d 
@@ -55,7 +56,8 @@ from pylap.plotting import plot_ray_iono_slice as plot_iono
 
 import matplotlib.pyplot as plt
 
-plt.switch_backend('QtAgg')
+if "MPLBACKEND" not in os.environ:
+    plt.switch_backend('QtAgg')
 #
 # setup general stuff
 #

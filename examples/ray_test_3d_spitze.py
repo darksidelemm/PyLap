@@ -23,7 +23,6 @@
   
 
 import math
-from turtle import shape
 import numpy as np  # py
 import time
 import ctypes as c

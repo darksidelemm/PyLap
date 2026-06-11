@@ -4,7 +4,7 @@ extern void iri2020_calc_(int *jf, int *jmag, float *glat, float *glon,
   int *year, int *mmdd, float *dhour, float *heibeg, float *heiend,
   float *heistep, float *outf, float *oarr);
 
-static PyObject *iri2016(PyObject *self, PyObject *args)
+static PyObject *iri2020(PyObject *self, PyObject *args)
 {
   Py_ssize_t num_args = PyTuple_Size(args);
   ASSERT((num_args == 4 || num_args == 7 || num_args == 8), PyExc_ValueError,
@@ -509,7 +509,7 @@ if(obj!=NULL){
 
 
     if (num_valid_fields != (int)PyDict_Size(iri_options)) {
-      PySys_WriteStderr("Warning: IRI2016 - Some of the fields of the supplied "
+      PySys_WriteStderr("Warning: IRI2020 - Some of the fields of the supplied "
         "iri_options structure \n");
       PySys_WriteStderr(" are not valid fields. These fields have been "
         "ignored.\n\n");
@@ -517,7 +517,7 @@ if(obj!=NULL){
     }
 
     if (invalid_field_flag) {
-      PySys_WriteStderr("Warning: IRI2016 - Some of the fields of the supplied "
+      PySys_WriteStderr("Warning: IRI2020 - Some of the fields of the supplied "
         "iri_options structure\n");
       PySys_WriteStderr("         have invalid values. These fields have been  "
         "ignored.\n\n");
@@ -598,21 +598,21 @@ if(obj!=NULL){
 
 
 static PyMethodDef methods[] = {
-  { "iri2016", iri2016, METH_VARARGS, "" },
+  { "iri2020", iri2020, METH_VARARGS, "" },
   { NULL, NULL, 0, NULL }
 };
 
 
 static struct PyModuleDef module = {
   PyModuleDef_HEAD_INIT,
-  "iri2016",
+  "iri2020",
   "",
   -1,
   methods
 };
 
 
-PyMODINIT_FUNC PyInit_iri2016()
+PyMODINIT_FUNC PyInit_iri2020()
 {
   PyObject *m = PyModule_Create(&module);
   if (m == NULL || PyErr_Occurred()) return NULL;

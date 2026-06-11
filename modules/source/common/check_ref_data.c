@@ -7,7 +7,6 @@
 
 int check_iri2007(const char *);
 int check_iri2012(const char *);
-int check_iri2016(const char *);
 int check_iri2020(const char *);
 int check_land_sea(const char *);
 
@@ -23,8 +22,6 @@ int check_ref_data(const char *files_to_check)
     return check_iri2007(refdata_dir);
   } else if (strncmp(files_to_check, "iri2012", 7) == 0) {
     return check_iri2012(refdata_dir);
-  } else if (strncmp(files_to_check, "iri2016", 7) == 0) {
-    return check_iri2016(refdata_dir);
   } else if (strncmp(files_to_check, "iri2020", 7) == 0) {
     return check_iri2020(refdata_dir);
   } else if (strncmp(files_to_check, "land_sea", 8) == 0) {
@@ -96,41 +93,6 @@ int check_iri2012(const char *refdata_dir)
     ASSERT_INT_NOMSG(check_file_exists(filename));
 
     snprintf(filename, 256, "%s/iri2012/ursi%d.asc", refdata_dir, month+10);
-    ASSERT_INT_NOMSG(check_file_exists(filename));
-  }
-
-  return 1;
-}
-
-int check_iri2016(const char *refdata_dir)
-{
-  char filename[256];
-
-  snprintf(filename, 256, "%s/iri2016/igrf2015.dat", refdata_dir);
-  ASSERT_INT_NOMSG(check_file_exists(filename));
-
-  snprintf(filename, 256, "%s/iri2016/igrf2015s.dat", refdata_dir);
-  ASSERT_INT_NOMSG(check_file_exists(filename));
-
-  for (int year = 1945; year <= 2010; year += 5) {
-    snprintf(filename, 256, "%s/iri2016/dgrf%d.dat", refdata_dir, year);
-    ASSERT_INT_NOMSG(check_file_exists(filename));
-  }
-
-  snprintf(filename, 256, "%s/iri2016/apf107.dat", refdata_dir);
-  ASSERT_INT_NOMSG(check_file_exists(filename));
-
-  snprintf(filename, 256, "%s/iri2016/ig_rz.dat", refdata_dir);
-  ASSERT_INT_NOMSG(check_file_exists(filename));
-
-  for (int month = 1; month <= 12; month++) {
-    snprintf(filename, 256, "%s/iri2016/mcsat%d.dat", refdata_dir, month+10);
-    ASSERT_INT_NOMSG(check_file_exists(filename));
-
-    snprintf(filename, 256, "%s/iri2016/ccir%d.asc", refdata_dir, month+10);
-    ASSERT_INT_NOMSG(check_file_exists(filename));
-
-    snprintf(filename, 256, "%s/iri2016/ursi%d.asc", refdata_dir, month+10);
     ASSERT_INT_NOMSG(check_file_exists(filename));
   }
 

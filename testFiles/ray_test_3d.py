@@ -27,7 +27,7 @@
 #M     call to raytrace_3d  
 #M
 #M   V2.0 M.A. Cervera  03/05/2016
-#M     Modified to make use of multi-threaded raytrace_3d. IRI2016 is now used
+#M     Modified to make use of multi-threaded raytrace_3d. IRI2020 is now used
 #M     to generate the ionosphere.
 #M
 #    W. C. Liles 10/08/2020

@@ -11,7 +11,7 @@ _ALIASES = {
 __all__ = [
     "chapman", "coning", "deriv", "do_stuff", "earth_radius_wgs84",
     "eff_coll_freq", "eff_coll_freq_ion", "eff_coll_freq_neutrals",
-    "enu2xyz", "gm_freq_offset", "iri2016_firi_interp", "julday",
+    "enu2xyz", "gm_freq_offset", "iri2020_firi_interp", "julday",
     "land_sea", "latlon2raz", "pol_power_coupling", "raz2latlon",
     "relaz2xyz", "solar_za", "wgs842gc_lat", "wgs84_llh2xyz",
     "wgs84_xyz2llh", "wrapped", "xyz2elaz", "xyz2enu",

@@ -9,8 +9,11 @@ from pylap.ionosphere import gen_SAMI3_iono_grid_2d as gen_iono
 from pylap.plotting import plot_ray_iono_slice as plot_iono
 import matplotlib.pyplot as plt
 import datetime as dt
+import os
+import sys
 from pathlib import Path
-plt.switch_backend('QtAgg')
+if "MPLBACKEND" not in os.environ:
+    plt.switch_backend('QtAgg')
 
 # Constants
 
@@ -29,6 +32,9 @@ datetime = dt.datetime(2023, 10, 13, 16,20)
 # replace with correct start time
 start_time = dt.datetime.now()
 filepath = Path(__file__).with_name('sami3_eclipse_2023.nc')
+if not filepath.exists():
+    print(f"Skipping sami3_ray_test1: optional input file not found: {filepath}")
+    sys.exit(0)
 
 # make ionosphere object
 print('Generating ionospheric grid... ')

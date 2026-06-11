@@ -1,9 +1,9 @@
 #M
 #M Name :
-#M   iri2016_firi_interp.m
+#M   iri2020_firi_interp.m
 #M
 #M Purpose :
-#M   Matlab wrapper to the IRI-2016 fortan based empirical model ionosphere,
+#M   Matlab wrapper to the IRI-2020 fortan based empirical model ionosphere,
 #M   using the FIRI rocketsonde-based model for the region below 120 km, and
 #M   interpolating between the FIRI model and the default IRI F layer model.
 #M   For (1) a given user specified R12 index (i.e. ionospheric condition), or 
@@ -16,22 +16,22 @@
 #M   IMPORTANT INFORMATION.  
 #M
 #M Calling sequence :
-#M    1. [iono, iono_extra] = iri2016_firi_interp(lat, lon, R12, UT, ...
+#M    1. [iono, iono_extra] = iri2020_firi_interp(lat, lon, R12, UT, ...
 #M                                 ht_start, ht_step, num_hts)
 #M
-#M    2. [iono, iono_extra] = iri2016_firi_interp(lat, lon, R12, UT, ...
+#M    2. [iono, iono_extra] = iri2020_firi_interp(lat, lon, R12, UT, ...
 #M                                 ht_start, ht_step ,num_hts, iri_options)
 #M
 #M Inputs :
 #M   lat      - geographic latitude of point (degrees)  
 #M   lon      - geographic longitude of point (degrees)
 #M   R12      - scalar R12 index
-#M      R12 = 1 - 200 :  IRI2016 is called with R12 (Zurich V1.0) input as the
+#M      R12 = 1 - 200 :  IRI2020 is called with R12 (Zurich V1.0) input as the
 #M                       user specified yearly smoothed monthly median sunspot
 #M                       number. The foF2 storm model will be turned off
 #M                       regardless of the setting of the optional input
 #M                       iri_options.foF2_storm (see below). 
-#M      R12 = -1      :  IRI2016 is called with ionospheric conditions (R12,
+#M      R12 = -1      :  IRI2020 is called with ionospheric conditions (R12,
 #M                       IG12, and F10.7) read from file (ig_rz.dat) based on
 #M                       input epoch (UT) and may be historical or projected
 #M                       conditions (dependent on the epoch). The foF2 storm
@@ -120,7 +120,7 @@
 #M
 #M       .Ne_B0B1_model - string which specifies the model to use for the
 #M                     bottomside ionospheric profile. The model defines how
-#M                     IRI2016 determines the B0 (thickness) and B1 (shape)
+#M                     IRI2020 determines the B0 (thickness) and B1 (shape)
 #M                     parameters. The default is ABT-2009. Valid values are:
 #M                       'ABT-2009'  (Adv. Space Res., Vol 43, 1825-1834, 2009) 
 #M                       'Bil-2000'  (Adv. Space Res., Vol 25, 89-96, 2000)
@@ -258,27 +258,27 @@
 #M      iono_extra(87 - 100) = Unused
 #M
 #M  Notes :
-#M   1. Notes for IRI2016 called using specified input ionospheric conditions:
+#M   1. Notes for IRI2020 called using specified input ionospheric conditions:
 #M   1.1 If the ionospheric conditions are controlled by the matlab input R12
 #M       index then the input year (in the UT array) has a very small effect
 #M       on  the solar conditions. For example 
-#M          [iono iono_extra] = iri2016(-25, 135, 70, [2000 1 1 3 0])
+#M          [iono iono_extra] = iri2020(-25, 135, 70, [2000 1 1 3 0])
 #M       returns NmF2 = 1.0252e+12 electrons/m^3, whereas
-#M          [iono iono_extra] = iri2016(-25, 135, 70, [2001 1 1 3 0])
+#M          [iono iono_extra] = iri2020(-25, 135, 70, [2001 1 1 3 0])
 #M       returns NmF2 = 1.0260e+12
 #M
 #M   1.2 User defined IG12, F10.7 and F10.7_81 (3 solar rotation average of
-#M       F10.7) required by IRI2016 are derived from R12 using the following
+#M       F10.7) required by IRI2020 are derived from R12 using the following
 #M       empirical formulas : 
 #M            F107    = 63.7 + 0.728*R12 + 0.00089*R12^2
 #M            F107_81 = F107
 #M            IG12 = -12.349154 + R12 * (1.4683266 - R12 * 2.67690893e-03)
 #M       These derived values for IG12, F10.7 and F10.7_81 are input into 
-#M       IRI-2016
+#M       IRI-2020
 #M
-#M   2. Notes for IRI2016 called using specified input epoch:
-#M   2.1 IRI2016 uses solar indices tabled in ig_rz.dat (which is supplied with
-#M       IRI2016). This file contains R12 and IG12 from Jan 1958 to Dec 2018. If 
+#M   2. Notes for IRI2020 called using specified input epoch:
+#M   2.1 IRI2020 uses solar indices tabled in ig_rz.dat (which is supplied with
+#M       IRI2020). This file contains R12 and IG12 from Jan 1958 to Dec 2018. If 
 #M       the input UT is outside this range then an error is returned. R12 is
 #M       used to model the height of the F2 layer and IG12 its strength.
 #M
@@ -293,14 +293,14 @@
 #M   2.3 ig_rz.dat updated 20-Feb-2016
 #M
 #M   2.4 The solar activity parameter F10.7 (daily) and magnetic activity Ap
-#M       index (3-hourly) used by IRI2016 are tabled in apf107.dat from 1 Jan 
+#M       index (3-hourly) used by IRI2020 are tabled in apf107.dat from 1 Jan 
 #M       1958 to 31 Dec 2014. If UT is outside this range then the storm model
 #M       (which relies on  Ap) is switched off and a monthly median F10.7
 #M       (calculated from R12 using the empirical formula F107 = 63.7 +
 #M       0.728*R12 + 0.00089*R12^2) is used in  place of the daily
 #M       F10.7. 
 #M
-#M   3. This mex file drives IRI-2016 with the following default options
+#M   3. This mex file drives IRI-2020 with the following default options
 #M      unless over-ridden and input by user via the specification of the 
 #M      optional input iri_options.
 #M      3.1  Ne computed
@@ -360,16 +360,17 @@
 #
 import numpy as np
 import scipy.interpolate as sci_int
+from pylap.iri2020 import iri2020
 #
 
-# function [iono, iono_extra] = iri2016_firi_interp(site_lat, site_lon, R12, ...
+# function [iono, iono_extra] = iri2020_firi_interp(site_lat, site_lon, R12, ...
 #      UT, start_height, height_step, num_heights, varargin)
-def iri2016_firi_interp(site_lat, site_lon, R12,
+def iri2020_firi_interp(site_lat, site_lon, R12,
       UT, start_height, height_step, num_heights, *varargin):
   
   
   # if (nargin < 7)
-  # error('iri2016_firi_interp:argChk', ...
+  # error('iri2020_firi_interp:argChk', ...
   #	  'Wrong number of input arguments: at leaset 7 inputs required')
   #  return
   # end
@@ -383,12 +384,10 @@ def iri2016_firi_interp(site_lat, site_lon, R12,
   #M override the input iri_options to make sure FIRI D-layer is selected
   iri_options['D_model'] = 'FT-2001'       
   
-  iri2016_arg_str = 'site_lat, site_lon, R12, UT, start_height,' + \
-		  'height_step, num_heights, iri_options'
- 
-  iricall_str = 'iri2016(' + iri2016_arg_str + ')'
-
-  iono, iono_extra = eval(iricall_str)
+  iono, iono_extra = iri2020(
+      site_lat, site_lon, R12, UT, start_height, height_step, num_heights,
+      iri_options,
+  )
    
   # height_axis = start_height+(0:(num_heights-1))*height_step
   height_axis = start_height + np.arange(0,num_heights * height_step,
@@ -413,37 +412,30 @@ def iri2016_firi_interp(site_lat, site_lon, R12,
   firi_transition = np.logical_and(height_axis > bottom_transition,
                                    height_axis < top_transition)
   # top_idx = find(height_axis > top_transition, 5, 'first')
-  top_temp = np.where(height_axis > top_transition)
-  if len(top_temp[0]) < 5:
-      top_idx = top_temp
-  else:
-      top_idx = top_temp[0][:5]
+  top_idx = np.where(height_axis > top_transition)[0][:5]
   
   # bottom_idx = find(height_axis <= bottom_transition, 5, 'last')
-  bottom_temp = np.where(height_axis <= bottom_transition)
-  if np.shape(bottom_temp[1]) < 5:
-      bottom_idx = bottom_temp
-  else:
-      bottom_idx = bottom_temp[0][-5:]
+  bottom_idx = np.where(height_axis <= bottom_transition)[0][-5:]
       
 
   # iono(1,firi_transition) = exp(interp1(height_axis([top_idx bottom_idx]), \
   #   log(iono(1,[top_idx bottom_idx])), height_axis(firi_transition), 'pchip'))
-  pchip_func = sci_int.PchipInterpolator(
-      height_axis[np.concatenate((top_idx, bottom_idx))],
-      np.log(iono[0][np.concatenate((top_idx, bottom_idx))]))
-  iono[0][firi_transition] = np.exp(pchip_func(height_axis[firi_transition]))
+  interp_idx = np.concatenate((bottom_idx, top_idx))
+  if firi_transition.any() and interp_idx.size >= 2:
+    pchip_func = sci_int.PchipInterpolator(
+        height_axis[interp_idx],
+        np.log(iono[0][interp_idx]))
+    iono[0][firi_transition] = np.exp(pchip_func(height_axis[firi_transition]))
   
       
   valid = iono[0] > 0
   # bottom = find(valid, 5, 'first')
-  bottom_temp = np.where(valid)
-  if np.shape(bottom_temp)[1] < 5:
-      bottom = bottom_temp
-  else: 
-      bottom = bottom_temp[0][:5]
-  iono[0][~valid] = np.exp(np.interp(height_axis(~valid),
-                        np.concatenate((np.array([40]), height_axis[bottom])), 
-      np.log(np.concatenate((np.array([1e-10]), iono[0][bottom])))))
+  bottom = np.where(valid)[0][:5]
+  if np.any(~valid) and bottom.size:
+    iono[0][~valid] = np.exp(np.interp(
+        height_axis[~valid],
+        np.concatenate((np.array([40.0]), height_axis[bottom])),
+        np.log(np.concatenate((np.array([1e-10]), iono[0][bottom]))),
+    ))
   iono[0][height_axis < 40] = 0
   return iono, iono_extra

@@ -68,12 +68,37 @@ Created on Fri Jun 12 20:49:47 2020
 #M
 
 import numpy as np
+import os
 import matplotlib
-matplotlib.use('QtAgg')
+if "MPLBACKEND" not in os.environ:
+    matplotlib.use('QtAgg')
 import matplotlib.pyplot as plt
 import sys
 import platform
-from qtpy.QtWidgets import QApplication
+
+
+class _ScreenGeometry:
+    def __init__(self, width, height):
+        self._width = width
+        self._height = height
+
+    def width(self):
+        return self._width
+
+    def height(self):
+        return self._height
+
+
+def _screen_geometry():
+    if matplotlib.get_backend().lower() == "agg":
+        return 96.0, _ScreenGeometry(1440, 900)
+    try:
+        from qtpy.QtWidgets import QApplication
+        app = QApplication.instance() or QApplication(sys.argv)
+        screen = app.screens()[0]
+        return screen.physicalDotsPerInch(), screen.geometry()
+    except Exception:
+        return 96.0, _ScreenGeometry(1440, 900)
 
 
 def plot_ray_iono_slice(iono_grid, start_range, end_range, range_inc,
@@ -117,10 +142,7 @@ def plot_ray_iono_slice(iono_grid, start_range, end_range, range_inc,
 
 
     
-    app = QApplication.instance() or QApplication(sys.argv)
-    screen = app.screens()[0]
-    dpi= screen.physicalDotsPerInch()
-    scrsz = screen.geometry()
+    dpi, scrsz = _screen_geometry()
     scrsz_height = int(scrsz.height() * 0.6)
     scrsz_width = int(scrsz.width() * 0.9)
     op_sys = platform.system()

@@ -12,8 +12,8 @@ ray_test1:
         dop_spread_eq converted
         igrf2016 wrapper
         irreg_strength wrapper
-        iri2016_firi_interp converted
-        iri2016 wrapper
+        iri2020_firi_interp converted
+        iri2020 wrapper
         iri2012 wrapper
         iri2007 wrapper
     raytrace_2d:  wrapper

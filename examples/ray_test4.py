@@ -25,13 +25,16 @@ import time
 import ctypes as c
 
 
+import os
+
 from pylap.raytrace_2d import raytrace_2d 
 from pylap.ionosphere import gen_iono_grid_2d as gen_iono
 from pylap.plotting import plot_ray_iono_slice as plot_iono
 
 import matplotlib.pyplot as plt
 
-plt.switch_backend('QtAgg')
+if "MPLBACKEND" not in os.environ:
+    plt.switch_backend('QtAgg')
 
 #
 # setup general stuff

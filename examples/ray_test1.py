@@ -33,7 +33,7 @@
 #M      More efficient handling of ionospheric grids in call to raytrace_2d
 #M
 #M   V1.4  M.A. Cervera  02/05/2016
-#M      Updated to use IRI2016
+#M      Updated to use IRI2020
 #M
 #M   V1.5  M.A. Cervera  20/05/2016
 #M      Updated to use multi-threaded raytrace_2d
